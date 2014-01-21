@@ -23,6 +23,7 @@ public class RepairCmd implements CommandExecutor {
 			else{
 				ItemStack item = senderPlayer.getItemInHand();
 				int ITEM_COST = 0;
+				int XP_COST = 0;
 				if(!isRepairable(item)){
 					sender.sendMessage(ChatColor.GOLD + "You may only repair diamond tools or bows!");
 					return true;
@@ -36,12 +37,15 @@ public class RepairCmd implements CommandExecutor {
 				}
 				else if(item.getDurability() > 66){
 					ITEM_COST = 3;
+					XP_COST = getRepairXPCost(item.getDurability());
 				}
 				else if(item.getDurability() > 33){
 					ITEM_COST = 2;
+					XP_COST = getRepairXPCost(item.getDurability());
 				}
 				else if(item.getDurability() > 0){
 					ITEM_COST = 1;
+					XP_COST = getRepairXPCost(item.getDurability());
 				}
 				ITEM_COST = getArmorCostModifier(item, ITEM_COST);
 				if(!checkIngredients(senderPlayer, item, ITEM_COST)){
@@ -49,8 +53,14 @@ public class RepairCmd implements CommandExecutor {
 							ChatColor.GOLD + " of the required material in your inventory to repair this item!");
 					return true;
 				}
+				if(!checkRepairXPCost(senderPlayer, XP_COST)){
+					sender.sendMessage(ChatColor.GOLD + "You need at least " + ChatColor.BLUE + XP_COST +
+							ChatColor.GOLD + " XP to repair this item!");
+					return true;
+				}
 				Material mat = (item.getType().equals(Material.BOW)) ? Material.BOW : Material.DIAMOND;
 				senderPlayer.getInventory().remove(new ItemStack(mat, ITEM_COST));
+				senderPlayer.setLevel(senderPlayer.getLevel() - XP_COST);
 				item.setDurability((short) 0);
 				sender.sendMessage(ChatColor.GREEN + "Your item has been repaired!");
 				return true;
@@ -83,5 +93,13 @@ public class RepairCmd implements CommandExecutor {
 				item.getType().equals(Material.DIAMOND_HELMET) || item.getType().equals(Material.DIAMOND_CHESTPLATE) ||
 				item.getType().equals(Material.DIAMOND_LEGGINGS) || item.getType().equals(Material.DIAMOND_BOOTS) ||
 				item.getType().equals(Material.BOW);
+	}
+	
+	private boolean checkRepairXPCost(Player player, int xpCost){
+		return player.getLevel() > xpCost;
+	}
+	
+	private int getRepairXPCost(int modifier){
+		return modifier/2;
 	}
 }
