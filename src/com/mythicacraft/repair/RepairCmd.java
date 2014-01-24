@@ -24,6 +24,7 @@ public class RepairCmd implements CommandExecutor {
 				ItemStack item = senderPlayer.getItemInHand();
 				int ITEM_COST = 0;
 				int XP_COST = 0;
+				short durability = 0;
 				if(!isRepairable(item)){
 					sender.sendMessage(ChatColor.GOLD + "You may only repair diamond tools or bows!");
 					return true;
@@ -48,6 +49,15 @@ public class RepairCmd implements CommandExecutor {
 					XP_COST = getRepairXPCost(item.getDurability());
 				}
 				ITEM_COST = getArmorCostModifier(item, ITEM_COST);
+				
+				// If /repair half - cut requirements in half
+				if(args.length == 1 && args[0].equalsIgnoreCase("half")){
+					ITEM_COST = (ITEM_COST/2) + 1;
+					XP_COST /= 2;
+					durability = (short) (item.getDurability()/2);
+				}
+				else durability = -1;
+				
 				if(!checkIngredients(senderPlayer, item, ITEM_COST)){
 					sender.sendMessage(ChatColor.GOLD + "You need at least " + ChatColor.BLUE + ITEM_COST +
 							ChatColor.GOLD + " of the required material in your inventory to repair this item!");
@@ -61,7 +71,7 @@ public class RepairCmd implements CommandExecutor {
 				Material mat = (item.getType().equals(Material.BOW)) ? Material.BOW : Material.DIAMOND;
 				senderPlayer.getInventory().remove(new ItemStack(mat, ITEM_COST));
 				senderPlayer.setLevel(senderPlayer.getLevel() - XP_COST);
-				item.setDurability((short) 0);
+				item.setDurability((short) durability);
 				sender.sendMessage(ChatColor.GREEN + "Your item has been repaired!");
 				return true;
 			}
